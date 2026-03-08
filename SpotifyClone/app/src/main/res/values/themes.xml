@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SpotifyClone" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#1DB954</item>
+        <item name="colorPrimaryVariant">#158a3e</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="android:windowBackground">#121212</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#121212</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+    </style>
+
+    <style name="Theme.SpotifyClone.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#121212</item>
+        <item name="android:windowBackground">#121212</item>
+        <item name="android:windowAnimationStyle">@style/WindowAnimation</item>
+    </style>
+
+    <style name="WindowAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityOpenExitAnimation">@android:anim/fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:activityCloseExitAnimation">@android:anim/fade_out</item>
+    </style>
+</resources>

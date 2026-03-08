@@ -1,0 +1,38 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.spotifyclone.app-mergeDebugResources-46:/values-v16/values-v16.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\AALAP GOSWAMI\\.gradle\\caches\\transforms-3\\793a8a1d1307f6ed7bfe2a44344ccc4d\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "223"
+                    },
+                    "to": {
+                        "startLines": "3",
+                        "startColumns": "4",
+                        "startOffsets": "121",
+                        "endLines": "6",
+                        "endColumns": "12",
+                        "endOffsets": "289"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\AALAP GOSWAMI\\.gradle\\caches\\transforms-3\\a5281584de4b79394e2d359c4399aca2\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
+                    }
+                }
+            ]
+        }
+    ]
+}

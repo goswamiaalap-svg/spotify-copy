@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.spotifyclone.app-mergeDebugResources-46:/values-hdpi-v4/values-hdpi-v4.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\AALAP GOSWAMI\\.gradle\\caches\\transforms-3\\793a8a1d1307f6ed7bfe2a44344ccc4d\\transformed\\appcompat-1.6.1\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "13",
+                        "endOffsets": "327"
+                    }
+                }
+            ]
+        }
+    ]
+}

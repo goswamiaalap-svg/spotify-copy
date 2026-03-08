@@ -1,0 +1,50 @@
+[
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/drawable_splash_bg.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/drawable/splash_bg.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/layout_item_song.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/layout/item_song.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/layout_activity_splash.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/color_bottom_nav_color.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/color/bottom_nav_color.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/menu_bottom_nav_menu.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/menu/bottom_nav_menu.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/layout_activity_main.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/drawable_item_bg.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/drawable/item_bg.xml"
+    },
+    {
+        "merged": "com.spotifyclone.app-merged_res-48:/layout_item_album.xml.flat",
+        "source": "com.spotifyclone.app-main-50:/layout/item_album.xml"
+    }
+]

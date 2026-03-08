@@ -1,0 +1,4 @@
+🚀 Server running on http://localhost:5000
+⚠️  MongoDB not available: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017
+📦 Running in DEMO MODE with mock data
+✅ Demo Mode active — 50 songs, 10 albums, 10 artists

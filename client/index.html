@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <style>
+    :root {
+      --status-bar-height: env(safe-area-inset-top, 28px);
+      --bottom-inset: env(safe-area-inset-bottom, 8px);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      background: #000;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    input[type=search]::-webkit-search-cancel-button {
+      display: none;
+    }
+
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes eq1 {
+      from {
+        height: 4px;
+      }
+
+      to {
+        height: 14px;
+      }
+    }
+
+    @keyframes eq2 {
+      from {
+        height: 8px;
+      }
+
+      to {
+        height: 18px;
+      }
+    }
+
+    @keyframes eq3 {
+      from {
+        height: 6px;
+      }
+
+      to {
+        height: 12px;
+      }
+    }
+  </style>
+  <title>Spotify Clone</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>

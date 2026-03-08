@@ -1,0 +1,51 @@
+com.spotifyclone.app-jetified-savedstate-1.2.1-0 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\19e9b343461f0d099dd9eda0c3077102\transformed\jetified-savedstate-1.2.1\res
+com.spotifyclone.app-jetified-activity-ktx-1.8.0-1 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\214e2562c7c32275acc8ef3b540716a0\transformed\jetified-activity-ktx-1.8.0\res
+com.spotifyclone.app-navigation-fragment-2.7.7-2 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\22b330dc6a6e00898bac0a872da4bf4a\transformed\navigation-fragment-2.7.7\res
+com.spotifyclone.app-jetified-lifecycle-livedata-core-ktx-2.6.2-3 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\2447db164359949660d64238bb770214\transformed\jetified-lifecycle-livedata-core-ktx-2.6.2\res
+com.spotifyclone.app-drawerlayout-1.1.1-4 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\279d03f973d505e744e97b9569f88013\transformed\drawerlayout-1.1.1\res
+com.spotifyclone.app-constraintlayout-2.1.4-5 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\3a745cfccc854c9cc1588252c0a8869b\transformed\constraintlayout-2.1.4\res
+com.spotifyclone.app-navigation-runtime-ktx-2.7.7-6 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\43cc593ecb913d45fe02efefef39c88f\transformed\navigation-runtime-ktx-2.7.7\res
+com.spotifyclone.app-jetified-fragment-ktx-1.6.2-7 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\46bf1e81ab86e6b63672ebcfbf2c70e1\transformed\jetified-fragment-ktx-1.6.2\res
+com.spotifyclone.app-lifecycle-viewmodel-2.6.2-8 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\48305e9d3b4be8e2bb1485b713066e40\transformed\lifecycle-viewmodel-2.6.2\res
+com.spotifyclone.app-transition-1.4.1-9 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\492a1dbeeef3bdc607362428b42ff2d1\transformed\transition-1.4.1\res
+com.spotifyclone.app-jetified-annotation-experimental-1.3.0-10 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\619d7dc7f4698278774c904cb78ac868\transformed\jetified-annotation-experimental-1.3.0\res
+com.spotifyclone.app-core-runtime-2.2.0-11 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\65f593c936fc1b4801499ba5d229b637\transformed\core-runtime-2.2.0\res
+com.spotifyclone.app-jetified-window-1.0.0-12 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\752f38c7e0094f04af91b3c1bd250ca8\transformed\jetified-window-1.0.0\res
+com.spotifyclone.app-jetified-core-ktx-1.12.0-13 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\75de101a10a3350144f6230fe37d4fd8\transformed\jetified-core-ktx-1.12.0\res
+com.spotifyclone.app-appcompat-1.6.1-14 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\793a8a1d1307f6ed7bfe2a44344ccc4d\transformed\appcompat-1.6.1\res
+com.spotifyclone.app-jetified-lifecycle-viewmodel-savedstate-2.6.2-15 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\802ff84dd7f2dc11d50605c1c94a8643\transformed\jetified-lifecycle-viewmodel-savedstate-2.6.2\res
+com.spotifyclone.app-jetified-profileinstaller-1.3.0-16 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\80e9019e37402c0a20a15f5eadba945a\transformed\jetified-profileinstaller-1.3.0\res
+com.spotifyclone.app-navigation-common-2.7.7-17 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\83a4f0bf9325afeb775df054d2b4774a\transformed\navigation-common-2.7.7\res
+com.spotifyclone.app-jetified-glide-4.16.0-18 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\859883dd602b1685e5a4f9c539805225\transformed\jetified-glide-4.16.0\res
+com.spotifyclone.app-fragment-1.6.2-19 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\8f198edb0d9b29fc48bbc487a6768eba\transformed\fragment-1.6.2\res
+com.spotifyclone.app-jetified-startup-runtime-1.1.1-20 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\9ae824cbf33a86068279c84b35d69a21\transformed\jetified-startup-runtime-1.1.1\res
+com.spotifyclone.app-recyclerview-1.1.0-21 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\a1284f0bca0c980dbcca60263dcc6fbd\transformed\recyclerview-1.1.0\res
+com.spotifyclone.app-core-1.12.0-22 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\a5281584de4b79394e2d359c4399aca2\transformed\core-1.12.0\res
+com.spotifyclone.app-jetified-emoji2-views-helper-1.2.0-23 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\a7bf8f4d3017ffabbaedad37d06fd2aa\transformed\jetified-emoji2-views-helper-1.2.0\res
+com.spotifyclone.app-coordinatorlayout-1.1.0-24 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\ae6850eeabc4014e329497f663db541f\transformed\coordinatorlayout-1.1.0\res
+com.spotifyclone.app-navigation-runtime-2.7.7-25 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\b65c33384b2ba3e528380bde75ae838a\transformed\navigation-runtime-2.7.7\res
+com.spotifyclone.app-jetified-lifecycle-runtime-ktx-2.6.2-26 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\bb0ea0e042fbd3e20d547fe011134d8a\transformed\jetified-lifecycle-runtime-ktx-2.6.2\res
+com.spotifyclone.app-slidingpanelayout-1.2.0-27 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\c18d8b5ac9f6704925cfe6a8671cd352\transformed\slidingpanelayout-1.2.0\res
+com.spotifyclone.app-navigation-ui-2.7.7-28 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\c2e62dff75b49ca79709c6ec7dccb3df\transformed\navigation-ui-2.7.7\res
+com.spotifyclone.app-material-1.11.0-29 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\c65609598430f263257244c58051f766\transformed\material-1.11.0\res
+com.spotifyclone.app-navigation-fragment-ktx-2.7.7-30 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\cf2b1991463f66e3bb377f8f1c318361\transformed\navigation-fragment-ktx-2.7.7\res
+com.spotifyclone.app-lifecycle-runtime-2.6.2-31 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\d57e235aa7cf525f9026af9718670ccf\transformed\lifecycle-runtime-2.6.2\res
+com.spotifyclone.app-lifecycle-livedata-2.6.2-32 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\da101a3cadf90906dae5f7b0bda3ac99\transformed\lifecycle-livedata-2.6.2\res
+com.spotifyclone.app-lifecycle-livedata-core-2.6.2-33 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\df1041a2cc1cb96b32cc392576808335\transformed\lifecycle-livedata-core-2.6.2\res
+com.spotifyclone.app-jetified-lifecycle-viewmodel-ktx-2.6.2-34 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\df418673d937b71b44e5b7f7cf1ce2c8\transformed\jetified-lifecycle-viewmodel-ktx-2.6.2\res
+com.spotifyclone.app-navigation-common-ktx-2.7.7-35 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\e03ee825c185620157d92ad218b977c4\transformed\navigation-common-ktx-2.7.7\res
+com.spotifyclone.app-cardview-1.0.0-36 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\e1aef6a9a30aef4153621cbd867fc254\transformed\cardview-1.0.0\res
+com.spotifyclone.app-navigation-ui-ktx-2.7.7-37 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\e65c00ce28f06a3d4e78b36c22079ab8\transformed\navigation-ui-ktx-2.7.7\res
+com.spotifyclone.app-jetified-appcompat-resources-1.6.1-38 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\e698c96f622c97ec591a35b59c0a2626\transformed\jetified-appcompat-resources-1.6.1\res
+com.spotifyclone.app-jetified-viewpager2-1.0.0-39 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\f66a5803cf1a8b8feb2dc8fea92218cd\transformed\jetified-viewpager2-1.0.0\res
+com.spotifyclone.app-jetified-savedstate-ktx-1.2.1-40 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\f725439b8b6dd7127828df79a04a058f\transformed\jetified-savedstate-ktx-1.2.1\res
+com.spotifyclone.app-jetified-emoji2-1.2.0-41 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\f7f7e84496f64698c7abc8309be22375\transformed\jetified-emoji2-1.2.0\res
+com.spotifyclone.app-jetified-lifecycle-process-2.6.2-42 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\fd1d02a1bdcc7dad22e4936e02f3a642\transformed\jetified-lifecycle-process-2.6.2\res
+com.spotifyclone.app-jetified-activity-1.8.0-43 C:\Users\AALAP GOSWAMI\.gradle\caches\transforms-3\ffad44702b6bfef512406e35e3dcbcef\transformed\jetified-activity-1.8.0\res
+com.spotifyclone.app-pngs-44 C:\Users\AALAP GOSWAMI\OneDrive\Desktop\spotify copy\SpotifyClone\app\build\generated\res\pngs\debug
+com.spotifyclone.app-resValues-45 C:\Users\AALAP GOSWAMI\OneDrive\Desktop\spotify copy\SpotifyClone\app\build\generated\res\resValues\debug
+com.spotifyclone.app-packageDebugResources-46 C:\Users\AALAP GOSWAMI\OneDrive\Desktop\spotify copy\SpotifyClone\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.spotifyclone.app-packageDebugResources-47 C:\Users\AALAP GOSWAMI\OneDrive\Desktop\spotify copy\SpotifyClone\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.spotifyclone.app-merged_res-48 C:\Users\AALAP GOSWAMI\OneDrive\Desktop\spotify copy\SpotifyClone\app\build\intermediates\merged_res\debug
+com.spotifyclone.app-debug-49 C:\Users\AALAP GOSWAMI\OneDrive\Desktop\spotify copy\SpotifyClone\app\src\debug\res
+com.spotifyclone.app-main-50 C:\Users\AALAP GOSWAMI\OneDrive\Desktop\spotify copy\SpotifyClone\app\src\main\res
