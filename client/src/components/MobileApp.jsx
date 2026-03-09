@@ -693,8 +693,15 @@ function MobileLibrary() {
 
 function MobileHomePage() {
   const { playSong } = usePlayerStore();
-  const [loading, setLoading] = useState(false);
   const [greeting, setGreeting] = useState('Good morning');
+  const [activeCategory, setActiveCategory] = useState('Music');
+  const [musicData, setMusicData] = useState({ trending: [], madeForYou: [], newReleases: [] });
+  const [podcasts, setPodcasts] = useState([]);
+  const [audiobooks, setAudiobooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const YOUR_API = 'https://new-youtube-o7cl.onrender.com';
+  const SAAVN = 'https://saavn.dev/api';
 
   useEffect(() => {
     const hours = new Date().getHours();
@@ -702,19 +709,80 @@ function MobileHomePage() {
     else if (hours >= 17 || hours < 5) setGreeting('Good evening');
   }, []);
 
-  const [activeCategory, setActiveCategory] = useState('Music');
+  const fetchMusic = async () => {
+    setLoading(true);
+    try {
+      const [trendingRes, newRes] = await Promise.all([
+        fetch(`${SAAVN}/search/songs?query=trending+songs&limit=15`).then(r => r.json()),
+        fetch(`${SAAVN}/search/songs?query=new+hits+2024&limit=10`).then(r => r.json())
+      ]);
+
+      const parse = (res) => (res?.data?.results || []).map(s => ({
+        id: `saavn-${s.id}`,
+        title: s.name,
+        artist: s.artists?.primary?.[0]?.name || 'Unknown',
+        albumArt: s.image?.[2]?.url || s.image?.[1]?.url || '',
+        audioUrl: s.downloadUrl?.[s.downloadUrl.length - 1]?.url,
+        source: 'JioSaavn',
+        duration: s.duration
+      }));
+
+      setMusicData({
+        trending: parse(trendingRes),
+        newReleases: parse(newRes),
+        madeForYou: parse(trendingRes).slice().reverse().slice(0, 8)
+      });
+    } catch (e) { console.error('Music fetch error:', e); }
+    setLoading(false);
+  };
+
+  const fetchCategory = async (cat, setter, query) => {
+    setLoading(true);
+    try {
+      const r = await fetch(`${YOUR_API}/search?q=${encodeURIComponent(query)}`);
+      if (r.ok) {
+        const items = await r.json();
+        const parsed = (items || []).map(item => ({
+          id: `yt-${item.videoId}`,
+          videoId: item.videoId,
+          title: item.title,
+          artist: item.author || 'YouTube',
+          albumArt: item.thumbnail,
+          audioUrl: `${YOUR_API}/audio?videoId=${item.videoId}`,
+          source: 'YouTube',
+          type: 'song',
+          duration: item.duration || 0
+        }));
+        setter(parsed);
+      }
+    } catch (e) { console.error(`${cat} fetch error:`, e); }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (activeCategory === 'Music' && musicData.trending.length === 0) fetchMusic();
+    if (activeCategory === 'Podcasts' && podcasts.length === 0) fetchCategory('Podcasts', setPodcasts, 'popular podcasts full episodes');
+    if (activeCategory === 'Audiobooks' && audiobooks.length === 0) fetchCategory('Audiobooks', setAudiobooks, 'best audiobooks full 2024');
+  }, [activeCategory]);
 
   const categories = ['Music', 'Podcasts', 'Audiobooks', 'Concerts', 'Charts'];
 
   const renderContent = () => {
+    if (loading) return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="w-8 h-8 border-4 border-white/10 border-t-[#1DB954] rounded-full animate-spin" />
+        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Loading {activeCategory}...</span>
+      </div>
+    );
+
     if (activeCategory === 'Podcasts') {
       return (
         <section className="animate-in fade-in duration-500">
           <h2 className="text-xl font-black text-white mb-4 tracking-tighter">Popular Podcasts</h2>
           <div className="grid grid-cols-2 gap-4">
-            {MOCK_DATA.podcasts.map(pod => (
-              <div key={pod.id} className="flex flex-col gap-2 active:scale-95 transition-transform" onClick={() => playSong(pod, MOCK_DATA.podcasts)}>
-                <SongImage src={pod.albumArt} source="Mock" size={160} radius={12} className="w-full aspect-square shadow-xl" />
+            {podcasts.map(pod => (
+              <div key={pod.id} className="flex flex-col gap-2 active:scale-95 transition-transform" onClick={() => playSong(pod, podcasts)}>
+                <SongImage src={pod.albumArt} source="YouTube" size={160} radius={12} className="w-full aspect-square shadow-xl" />
                 <div className="text-sm font-bold text-white line-clamp-1">{pod.title}</div>
                 <div className="text-xs font-medium text-zinc-500 line-clamp-1">{pod.artist}</div>
               </div>
@@ -729,9 +797,9 @@ function MobileHomePage() {
         <section className="animate-in fade-in duration-500">
           <h2 className="text-xl font-black text-white mb-4 tracking-tighter">Trending Audiobooks</h2>
           <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-4 px-4">
-            {MOCK_DATA.audiobooks.map(book => (
-              <div key={book.id} className="shrink-0 w-40 active:scale-95 transition-transform" onClick={() => playSong(book, MOCK_DATA.audiobooks)}>
-                <SongImage src={book.albumArt} source="Mock" size={160} radius={8} className="shadow-2xl mb-2" />
+            {audiobooks.map(book => (
+              <div key={book.id} className="shrink-0 w-40 active:scale-95 transition-transform" onClick={() => playSong(book, audiobooks)}>
+                <SongImage src={book.albumArt} source="YouTube" size={160} radius={8} className="shadow-2xl mb-2" />
                 <div className="text-[13px] font-bold text-white line-clamp-1">{book.title}</div>
                 <div className="text-[11px] font-medium text-zinc-400 mt-1">{book.artist}</div>
               </div>
@@ -744,13 +812,13 @@ function MobileHomePage() {
     // Default: Music
     return (
       <>
-        {/* 🔴 TOP MIXES (2x4 Grid) */}
+        {/* 🔴 TOP MIXES */}
         <section className="mb-10 animate-in slide-in-from-bottom-2 duration-700">
           <div className="grid grid-cols-2 gap-2">
-            {MOCK_DATA.recentlyPlayed.slice(0, 6).map(song => (
+            {musicData.trending.slice(0, 6).map(song => (
               <div
                 key={song.id}
-                onClick={() => playSong(song, MOCK_DATA.recentlyPlayed)}
+                onClick={() => playSong(song, musicData.trending)}
                 className="flex items-center bg-white/10 rounded-md overflow-hidden active:scale-95 transition-transform"
               >
                 <SongImage src={song.albumArt} source={song.source} size={56} radius={0} />
@@ -762,23 +830,18 @@ function MobileHomePage() {
           </div>
         </section>
 
-        {/* 🔴 TRENDING NOW (Horizontal Scroll) */}
+        {/* 🔴 TRENDING NOW */}
         <section className="mb-10">
           <h2 className="text-xl font-black text-white mb-4 tracking-tighter">Trending Now</h2>
           <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-4 px-4 pb-4">
-            {MOCK_DATA.trending.map(song => (
+            {musicData.trending.map(song => (
               <div
                 key={song.id}
-                onClick={() => playSong(song, MOCK_DATA.trending)}
+                onClick={() => playSong(song, musicData.trending)}
                 className="shrink-0 w-36 active:scale-95 transition-transform group"
               >
-                <div className="relative mb-3 shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
+                <div className="relative mb-3 shadow-2xl">
                   <SongImage src={song.albumArt} source={song.source} size={144} radius={8} />
-                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="w-8 h-8 bg-[#1DB954] rounded-full flex items-center justify-center text-black shadow-lg">
-                      <Play size={16} fill="currentColor" className="ml-0.5" />
-                    </div>
-                  </div>
                 </div>
                 <div className="text-[12px] font-bold text-white truncate">{song.title}</div>
                 <div className="text-[11px] font-medium text-zinc-400 mt-1 truncate uppercase tracking-tighter">{song.artist}</div>
@@ -787,21 +850,18 @@ function MobileHomePage() {
           </div>
         </section>
 
-        {/* 🔴 MADE FOR YOU (Circles Mix) */}
+        {/* 🔴 MADE FOR YOU */}
         <section className="mb-10">
           <h2 className="text-xl font-black text-white mb-4 tracking-tighter">Made For You</h2>
           <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-4 px-4 pb-2">
-            {MOCK_DATA.madeForYou.map(song => (
+            {musicData.madeForYou.map(song => (
               <div
                 key={song.id}
-                onClick={() => playSong(song, MOCK_DATA.madeForYou)}
+                onClick={() => playSong(song, musicData.madeForYou)}
                 className="shrink-0 w-32 text-center active:scale-95 transition-transform"
               >
                 <div className="relative inline-block mb-3">
                   <SongImage src={song.albumArt} source={song.source} size={128} radius={64} className="ring-1 ring-white/10" />
-                  <div className="absolute bottom-1 right-1 w-8 h-8 bg-[#1DB954] rounded-full flex items-center justify-center text-black border-2 border-zinc-950 shadow-xl">
-                    <Play size={14} fill="currentColor" className="ml-0.5" />
-                  </div>
                 </div>
                 <div className="text-[11px] font-bold text-white line-clamp-1">{song.title}</div>
                 <div className="text-[10px] font-medium text-zinc-500 mt-1 uppercase">Spotify Mix</div>
@@ -812,6 +872,8 @@ function MobileHomePage() {
       </>
     );
   };
+
+  const jumpItem = activeCategory === 'Podcasts' ? podcasts[0] : (activeCategory === 'Audiobooks' ? audiobooks[0] : musicData.trending[0]);
 
   return (
     <div className="px-4 pt-12 pb-32 min-h-screen bg-gradient-to-b from-zinc-900 to-black overflow-x-hidden">
@@ -839,27 +901,29 @@ function MobileHomePage() {
         </div>
       </header>
 
-      {/* 🔴 JUMP BACK IN / NEW SECTION */}
-      <section className="mb-10 animate-in slide-in-from-left duration-700">
-        <div className="flex items-center gap-4 bg-gradient-to-r from-zinc-800 to-zinc-900 p-4 rounded-xl shadow-2xl border border-white/5 group active:scale-95 transition-all">
-          <SongImage
-            src={MOCK_DATA.recentlyPlayedLarge[activeCategory === 'Podcasts' ? 1 : 0].albumArt}
-            source="Mock" size={80} radius={8}
-            className="shadow-xl ring-2 ring-white/10 group-hover:scale-105 transition-transform"
-          />
-          <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 italic">Jump back in</div>
-            <div className="text-lg font-black text-white truncate tracking-tight">{MOCK_DATA.recentlyPlayedLarge[activeCategory === 'Podcasts' ? 1 : 0].title}</div>
-            <div className="text-sm font-medium text-zinc-400 truncate mt-0.5">{MOCK_DATA.recentlyPlayedLarge[activeCategory === 'Podcasts' ? 1 : 0].artist}</div>
+      {/* 🔴 JUMP BACK IN section only shown if data exists */}
+      {jumpItem && (
+        <section className="mb-10 animate-in slide-in-from-left duration-700">
+          <div className="flex items-center gap-4 bg-gradient-to-r from-zinc-800 to-zinc-900 p-4 rounded-xl shadow-2xl border border-white/5 group active:scale-95 transition-all">
+            <SongImage
+              src={jumpItem.albumArt}
+              source={jumpItem.source} size={80} radius={8}
+              className="shadow-xl ring-2 ring-white/10 group-hover:scale-105 transition-transform"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1 italic">Jump back in</div>
+              <div className="text-lg font-black text-white truncate tracking-tight">{jumpItem.title}</div>
+              <div className="text-sm font-medium text-zinc-400 truncate mt-0.5">{jumpItem.artist}</div>
+            </div>
+            <button
+              onClick={() => playSong(jumpItem)}
+              className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-xl active:scale-90 transition-transform"
+            >
+              <Play size={20} fill="currentColor" className="ml-1" />
+            </button>
           </div>
-          <button
-            onClick={() => playSong(MOCK_DATA.recentlyPlayedLarge[activeCategory === 'Podcasts' ? 1 : 0])}
-            className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-xl active:scale-90 transition-transform"
-          >
-            <Play size={20} fill="currentColor" className="ml-1" />
-          </button>
-        </div>
-      </section>
+        </section>
+      )}
 
       {renderContent()}
 
