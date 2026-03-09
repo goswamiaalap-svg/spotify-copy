@@ -42,19 +42,21 @@ export default function ArtistsPage() {
     const { playSong } = usePlayerStore();
 
     const handleArtistClick = async (artist) => {
-        if (loadingArtist) return;
+        if (!artist || loadingArtist) return;
         setLoadingArtist(artist.name);
         setSelectedArtist(artist);
         setSongs([]);
         setError('');
 
-        for (const q of artist.queries) {
+        const queries = artist.queries || [artist.name + ' songs', artist.name];
+
+        for (const q of queries) {
             try {
                 const res = await axios.get(
-                    `${SAAVN}/search/songs?query=${encodeURIComponent(q)}&limit=20`,
+                    `${SAAVN}/search/songs?query=${encodeURIComponent(q)}&limit=25`,
                     { timeout: 20000 }
                 );
-                const results = res.data?.data?.results;
+                const results = res.data?.data?.results || res.data?.data || [];
                 if (results?.length > 0) {
                     setSongs(parseSongs(results));
                     setLoadingArtist(null);
@@ -62,9 +64,17 @@ export default function ArtistsPage() {
                 }
             } catch (e) { console.warn('Failed query:', q); }
         }
-        setError('Could not load. Check connection.');
+        setError('No songs found for this artist.');
         setLoadingArtist(null);
     };
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('name');
+        if (name) {
+            handleArtistClick({ name, queries: [name] });
+        }
+    }, [window.location.search]);
 
     const handleSearch = (q) => {
         setSearchQ(q);

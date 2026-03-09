@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
 
 const GENRES = [
@@ -46,6 +47,8 @@ async function searchEverywhere(query) {
   const seen = new Set();
   const ytSongs = [];
   const saavnSongs = [];
+  const saavnArtists = [];
+  const saavnPlaylists = [];
   const audiusSongs = [];
   const previews = [];
 
@@ -59,7 +62,7 @@ async function searchEverywhere(query) {
   };
 
   await Promise.allSettled([
-    // ── YOUR YouTube API — FULL songs via Render ──
+    // ── YOUR YouTube API — FULL songs ──
     fetch(`${YOUR_API}/search?q=${encodeURIComponent(query)}`, {
       signal: AbortSignal.timeout(10000)
     }).then(r => r.json()).then(items => {
@@ -75,12 +78,13 @@ async function searchEverywhere(query) {
           audioUrl: `${YOUR_API}/audio?videoId=${item.videoId}`,
           downloadUrl: [{ url: `${YOUR_API}/audio?videoId=${item.videoId}`, quality: 'full' }],
           source: 'YouTube',
+          type: 'song',
           isPreview: false,
         });
       });
     }).catch(e => console.log('YT API error:', e)),
 
-    // ── JioSaavn — FULL SONGS ──
+    // ── JioSaavn — SONGS ──
     fetch(`https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}&limit=10`, {
       signal: AbortSignal.timeout(8000)
     }).then(r => r.json()).then(d => {
@@ -96,12 +100,44 @@ async function searchEverywhere(query) {
           duration: s.duration,
           audioUrl: best.url,
           downloadUrl: s.downloadUrl,
-          source: 'JioSaavn', isPreview: false,
+          source: 'JioSaavn',
+          type: 'song',
+          isPreview: false,
         });
       });
     }).catch(() => { }),
 
-    // ── Audius — FULL SONGS ──
+    // ── JioSaavn — ARTISTS ──
+    fetch(`https://saavn.dev/api/search/artists?query=${encodeURIComponent(query)}&limit=5`)
+      .then(r => r.json()).then(d => {
+        (d?.data?.results || []).forEach(a => {
+          saavnArtists.push({
+            id: `artist-${a.id}`,
+            name: a.name,
+            artist: 'Artist',
+            albumArt: a.image?.[2]?.url || a.image?.[1]?.url || '',
+            source: 'JioSaavn',
+            type: 'artist'
+          });
+        });
+      }).catch(() => { }),
+
+    // ── JioSaavn — PLAYLISTS ──
+    fetch(`https://saavn.dev/api/search/playlists?query=${encodeURIComponent(query)}&limit=5`)
+      .then(r => r.json()).then(d => {
+        (d?.data?.results || []).forEach(p => {
+          saavnPlaylists.push({
+            id: `playlist-${p.id}`,
+            name: p.name,
+            artist: `Playlist · ${p.songCount || 0} songs`,
+            albumArt: p.image?.[2]?.url || p.image?.[1]?.url || '',
+            source: 'JioSaavn',
+            type: 'playlist'
+          });
+        });
+      }).catch(() => { }),
+
+    // ── Audius — SONGS ──
     fetch(`https://discoveryprovider.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=10&app_name=SpotifyClone`, {
       signal: AbortSignal.timeout(8000)
     }).then(r => r.json()).then(d => {
@@ -115,7 +151,9 @@ async function searchEverywhere(query) {
           duration: s.duration,
           audioUrl: url,
           downloadUrl: [{ url, quality: 'full' }],
-          source: 'Audius', isPreview: false,
+          source: 'Audius',
+          type: 'song',
+          isPreview: false,
         });
       });
     }).catch(() => { }),
@@ -132,14 +170,20 @@ async function searchEverywhere(query) {
           albumArt: s.album?.cover_xl || s.album?.cover_big || '',
           duration: 30, audioUrl: s.preview,
           downloadUrl: [{ url: s.preview, quality: 'preview' }],
-          source: 'Deezer', isPreview: true,
+          source: 'Deezer',
+          type: 'song',
+          isPreview: true,
         });
       });
     }).catch(() => { }),
   ]);
 
-  // YouTube first → JioSaavn → Audius → Deezer previews
-  return [...ytSongs, ...saavnSongs, ...audiusSongs, ...previews];
+  // Mix Artist/Playlist into "All" or keep separate
+  return {
+    songs: [...ytSongs, ...saavnSongs, ...audiusSongs, ...previews],
+    artists: saavnArtists,
+    playlists: saavnPlaylists
+  };
 }
 
 function extractArtist(title) {
@@ -195,36 +239,43 @@ function SongSheet({ song, songs, onClose }) {
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState({ songs: [], artists: [], playlists: [] });
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [filter, setFilter] = useState('All');
   const [selectedSong, setSelectedSong] = useState(null);
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
+  const navigate = useNavigate();
   const { playSong, currentSong, isPlaying } = usePlayerStore();
 
   const doSearch = useCallback(async (q) => {
-    if (!q.trim()) { setResults([]); setSearched(false); setLoading(false); return; }
+    if (!q.trim()) { setResults({ songs: [], artists: [], playlists: [] }); setSearched(false); setLoading(false); return; }
     setLoading(true); setSearched(true); setFilter('All');
     try { setResults(await searchEverywhere(q.trim())); }
-    catch { setResults([]); }
+    catch { setResults({ songs: [], artists: [], playlists: [] }); }
     setLoading(false);
   }, []);
 
   const handleInput = val => {
     setQuery(val);
     clearTimeout(debounceRef.current);
-    if (!val.trim()) { setResults([]); setLoading(false); setSearched(false); return; }
+    if (!val.trim()) { setResults({ songs: [], artists: [], playlists: [] }); setLoading(false); setSearched(false); return; }
     setLoading(true);
     debounceRef.current = setTimeout(() => doSearch(val), 700);
   };
 
   const fmt = s => s ? `${Math.floor(s / 60)}:${String(Math.floor(s) % 60).padStart(2, '0')}` : '';
-  const sources = ['All', 'YouTube', 'JioSaavn', 'Audius', 'Deezer'];
-  const filtered = filter === 'All' ? results : results.filter(s => s.source === filter);
-  const fullCount = results.filter(s => !s.isPreview).length;
-  const previewCount = results.filter(s => s.isPreview).length;
+
+  // Custom categories for premium look
+  const categories = ['All', 'Songs', 'Artists', 'Playlists'];
+  const [category, setCategory] = useState('All');
+
+  const allSongs = results.songs;
+  const allArtists = results.artists;
+  const allPlaylists = results.playlists;
+
+  const hasResults = allSongs.length > 0 || allArtists.length > 0 || allPlaylists.length > 0;
 
   return (
     <div style={{ background: '#121212', minHeight: '100vh', paddingBottom: '140px' }}>
@@ -232,140 +283,149 @@ export default function SearchPage() {
       {/* Header */}
       <div style={{ padding: '0 16px 8px', paddingTop: 'calc(env(safe-area-inset-top,28px) + 12px)', position: 'sticky', top: 0, background: '#121212', zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{ color: 'white', fontSize: '22px', fontWeight: 900 }}>Search</h1>
-          </div>
-          {searched && results.length > 0 && (
-            <div style={{ background: 'rgba(29,185,84,0.12)', border: '1px solid rgba(29,185,84,0.25)', borderRadius: '500px', padding: '4px 12px', color: '#1DB954', fontSize: '12px', fontWeight: 700 }}>
-              {fullCount} full · {previewCount} preview
-            </div>
-          )}
+          <h1 style={{ color: 'white', fontSize: '22px', fontWeight: 900 }}>Search</h1>
         </div>
 
-        <div style={{ position: 'relative', marginBottom: searched && results.length > 0 ? '10px' : '0' }}>
+        <div style={{ position: 'relative', marginBottom: '12px' }}>
           <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#535353" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
           <input ref={inputRef} type="text" inputMode="search" value={query}
             onChange={e => handleInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && (clearTimeout(debounceRef.current), doSearch(query))}
-            placeholder="Songs, artists, albums"
+            placeholder="What do you want to listen to?"
             autoComplete="off" autoCorrect="off" spellCheck={false}
-            style={{ width: '100%', height: '46px', padding: '0 44px', background: 'white', border: 'none', borderRadius: '6px', color: '#121212', fontSize: '15px', fontWeight: 500, outline: 'none', boxSizing: 'border-box', WebkitAppearance: 'none' }}
+            style={{ width: '100%', height: '46px', padding: '0 44px', background: 'white', border: 'none', borderRadius: '6px', color: '#121212', fontSize: '14px', fontWeight: 500, outline: 'none', boxSizing: 'border-box' }}
           />
-          {query && <button onClick={() => { setQuery(''); setResults([]); setSearched(false); inputRef.current?.focus(); }}
-            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex' }}>
+          {query && <button onClick={() => { setQuery(''); setResults({ songs: [], artists: [], playlists: [] }); setSearched(false); inputRef.current?.focus(); }}
+            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="#535353"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" /></svg>
           </button>}
         </div>
 
-        {/* Source filter pills */}
-        {searched && results.length > 0 && (
-          <div style={{ display: 'flex', gap: '7px', overflowX: 'auto', paddingBottom: '8px', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-            {sources.map(s => {
-              const count = s === 'All' ? results.length : results.filter(r => r.source === s).length;
-              if (s !== 'All' && count === 0) return null;
-              return <button key={s} onClick={() => setFilter(s)}
-                style={{ flexShrink: 0, padding: '6px 14px', borderRadius: '500px', border: '1px solid', borderColor: filter === s ? 'white' : 'rgba(255,255,255,0.15)', background: filter === s ? 'white' : 'transparent', color: filter === s ? '#121212' : 'white', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                {s} ({count})
-              </button>;
-            })}
+        {searched && hasResults && (
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', noScrollbar: true }}>
+            {categories.map(cat => (
+              <button key={cat} onClick={() => setCategory(cat)}
+                style={{ flexShrink: 0, padding: '7px 16px', borderRadius: '500px', background: category === cat ? '#1DB954' : '#282828', color: category === cat ? 'black' : 'white', fontSize: '12px', fontWeight: 700, border: 'none' }}>
+                {cat}
+              </button>
+            ))}
           </div>
         )}
       </div>
 
-      {/* Loading — 3 spinning rings */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-          <div style={{ position: 'relative', width: '64px', height: '64px', margin: '0 auto 20px' }}>
-            <div style={{ position: 'absolute', inset: 0, border: '3px solid rgba(255,0,0,0.15)', borderTopColor: '#FF0000', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-            <div style={{ position: 'absolute', inset: '8px', border: '3px solid rgba(29,185,84,0.15)', borderTopColor: '#1DB954', borderRadius: '50%', animation: 'spin 1s linear infinite reverse' }} />
-            <div style={{ position: 'absolute', inset: '16px', border: '3px solid rgba(204,0,0,0.15)', borderTopColor: '#CC0000', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
-          </div>
-          <p style={{ color: 'white', fontSize: '15px', fontWeight: 700, marginBottom: '6px' }}>Searching everywhere…</p>
-          <p style={{ color: '#b3b3b3', fontSize: '13px' }}>YouTube · JioSaavn · Audius · Deezer</p>
+        <div style={{ textAlign: 'center', padding: '100px 24px' }}>
+          <div style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#1DB954', borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 0.8s linear infinite' }} />
+          <p style={{ color: '#b3b3b3', fontSize: '13px', fontWeight: 600 }}>Searching for "{query}"...</p>
         </div>
       )}
 
-      {/* Results */}
-      {!loading && filtered.length > 0 && (
-        <div style={{ padding: '4px 16px' }}>
-          {filtered.map((song, idx) => {
-            const active = currentSong?.id === song.id;
-            const isFirstPreview = song.isPreview && (idx === 0 || !filtered[idx - 1]?.isPreview);
-            return (
-              <div key={`${song.id}-${idx}`}>
-                {isFirstPreview && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 0 8px' }}>
-                    <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-                    <span style={{ color: '#FFA500', fontSize: '11px', fontWeight: 700 }}>⚠️ 30-second previews</span>
-                    <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.08)' }} />
-                  </div>
-                )}
-                <div onClick={() => playSong(song, filtered)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 0', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.04)', background: active ? 'rgba(29,185,84,0.06)' : 'transparent' }}
-                  onTouchStart={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
-                  onTouchEnd={e => { e.currentTarget.style.background = active ? 'rgba(29,185,84,0.06)' : 'transparent'; }}>
-                  <div style={{ position: 'relative', flexShrink: 0 }}>
-                    <SongImage src={song.albumArt} source={song.source} size={46} radius={4} />
-                    {active && isPlaying && (
-                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-end', height: '14px' }}>
-                          {[6, 12, 8].map((h, i) => <div key={i} style={{ width: '3px', background: '#1DB954', height: `${h}px`, borderRadius: '2px', animation: `eq${i + 1} ${0.4 + i * 0.1}s ease infinite alternate` }} />)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+      {!loading && searched && hasResults && (
+        <div style={{ padding: '0 16px' }}>
+
+          {/* TOP RESULT (Standard Spotify feature) */}
+          {(category === 'All') && allArtists[0] && (
+            <div style={{ marginBottom: '24px' }}>
+              <h2 style={{ color: 'white', fontSize: '18px', fontWeight: 900, marginBottom: '14px' }}>Top result</h2>
+              <div onClick={() => navigate(`/artists?id=${allArtists[0].id.replace('artist-', '')}`)}
+                style={{ padding: '20px', background: '#181818', borderRadius: '8px', cursor: 'pointer' }}>
+                <img src={allArtists[0].albumArt} style={{ width: '88px', height: '88px', borderRadius: '50%', marginBottom: '16px', boxShadow: '0 8px 24px rgba(0,0,0,0.5)' }} />
+                <div style={{ color: 'white', fontSize: '24px', fontWeight: 900 }}>{allArtists[0].name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#b3b3b3', fontWeight: 700, textTransform: 'uppercase' }}>Artist</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SONGS SECTION */}
+          {(category === 'All' || category === 'Songs') && allSongs.length > 0 && (
+            <div style={{ marginBottom: '32px' }}>
+              <h2 style={{ color: 'white', fontSize: '18px', fontWeight: 900, marginBottom: '14px' }}>Songs</h2>
+              {allSongs.slice(0, category === 'Songs' ? 50 : 5).map((song, i) => (
+                <div key={song.id} onClick={() => playSong(song, allSongs)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', cursor: 'pointer' }}>
+                  <img src={song.albumArt} style={{ width: '46px', height: '46px', borderRadius: '4px' }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: active ? '#1DB954' : 'white', fontSize: '14px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
-                      <span style={{ color: '#b3b3b3', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{song.artist}</span>
-                      <span style={{ fontSize: '9px', padding: '2px 5px', borderRadius: '3px', background: `${getSourceColor(song.source)}18`, color: getSourceColor(song.source), fontWeight: 700, flexShrink: 0, border: `1px solid ${getSourceColor(song.source)}33` }}>{song.source}</span>
-                    </div>
+                    <div style={{ color: currentSong?.id === song.id ? '#1DB954' : 'white', fontSize: '14px', fontWeight: 700, truncate: true }}>{song.title}</div>
+                    <div style={{ color: '#b3b3b3', fontSize: '12px', marginTop: '2px' }}>{song.artist}</div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-                    <span style={{ color: '#535353', fontSize: '11px' }}>{fmt(song.duration)}</span>
-                    {song.isPreview && <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '3px', background: 'rgba(255,165,0,0.15)', color: '#FFA500', fontWeight: 700 }}>30s</span>}
-                  </div>
-                  <button onClick={e => { e.stopPropagation(); setSelectedSong(song); }}
-                    style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', flexShrink: 0 }}>
+                  <button onClick={e => { e.stopPropagation(); setSelectedSong(song); }} style={{ background: 'none', border: 'none', padding: '8px' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="#b3b3b3"><circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" /></svg>
                   </button>
                 </div>
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          )}
+
+          {/* ARTISTS SECTION */}
+          {(category === 'All' || category === 'Artists') && allArtists.length > 0 && (
+            <div style={{ marginBottom: '32px' }}>
+              <h2 style={{ color: 'white', fontSize: '18px', fontWeight: 900, marginBottom: '14px' }}>Artists</h2>
+              {allArtists.slice(0, 10).map(a => (
+                <div key={a.id} onClick={() => navigate(`/artists?name=${encodeURIComponent(a.name)}`)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', cursor: 'pointer' }}>
+                  <img src={a.albumArt} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: 'white', fontSize: '14px', fontWeight: 700 }}>{a.name}</div>
+                    <div style={{ color: '#b3b3b3', fontSize: '12px' }}>Artist</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* PLAYLISTS SECTION */}
+          {(category === 'All' || category === 'Playlists') && allPlaylists.length > 0 && (
+            <div style={{ marginBottom: '32px' }}>
+              <h2 style={{ color: 'white', fontSize: '18px', fontWeight: 900, marginBottom: '14px' }}>Playlists</h2>
+              {allPlaylists.slice(0, 10).map(p => (
+                <div key={p.id} onClick={() => navigate(`/playlists?id=${p.id.replace('playlist-', '')}`)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', cursor: 'pointer' }}>
+                  <img src={p.albumArt} style={{ width: '48px', height: '48px', borderRadius: '6px' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: 'white', fontSize: '14px', fontWeight: 700 }}>{p.name}</div>
+                    <div style={{ color: '#b3b3b3', fontSize: '12px' }}>{p.artist}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* No results */}
-      {!loading && searched && results.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-          <div style={{ fontSize: '56px', marginBottom: '16px' }}>🔍</div>
-          <p style={{ color: 'white', fontSize: '18px', fontWeight: 800, marginBottom: '16px' }}>Nothing found for "{query}"</p>
-          <button onClick={() => window.open(`https://music.youtube.com/search?q=${encodeURIComponent(query)}`, '_blank')}
-            style={{ width: '100%', padding: '14px', background: '#FF0000', border: 'none', borderRadius: '500px', color: 'white', fontSize: '14px', fontWeight: 800, cursor: 'pointer', marginBottom: '10px' }}>
+      {!loading && searched && !hasResults && (
+        <div style={{ textAlign: 'center', padding: '100px 24px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>😕</div>
+          <h2 style={{ color: 'white', fontSize: '18px', fontWeight: 800 }}>No results found</h2>
+          <p style={{ color: '#b3b3b3', fontSize: '14px', marginTop: '8px' }}>Try searching something else</p>
+          <button
+            onClick={() => window.open(`https://music.youtube.com/search?q=${encodeURIComponent(query)}`, '_blank')}
+            style={{ marginTop: '24px', padding: '12px 24px', background: '#FF0000', border: 'none', borderRadius: '500px', color: 'white', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}
+          >
             🎬 Open in YouTube Music
           </button>
         </div>
       )}
 
-      {/* Browse */}
+      {/* Browse All (Initial State) */}
       {!query && !loading && (
         <div style={{ padding: '8px 16px' }}>
           <h2 style={{ color: 'white', fontSize: '16px', fontWeight: 800, marginBottom: '14px' }}>Browse all</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             {GENRES.map(g => (
               <div key={g.name} onClick={() => { setQuery(g.name); doSearch(g.name); }}
-                style={{ background: g.color, borderRadius: '8px', padding: '16px 14px', minHeight: '80px', cursor: 'pointer' }}
-                onTouchStart={e => e.currentTarget.style.opacity = '0.85'}
-                onTouchEnd={e => e.currentTarget.style.opacity = '1'}>
-                <span style={{ color: 'white', fontSize: '14px', fontWeight: 800 }}>{g.name}</span>
+                style={{ background: g.color, borderRadius: '8px', padding: '16px 14px', minHeight: '80px', cursor: 'pointer', overflow: 'hidden', position: 'relative' }}
+              >
+                <span style={{ color: 'white', fontSize: '15px', fontWeight: 800, position: 'relative', zIndex: 1 }}>{g.name}</span>
+                <div style={{ position: 'absolute', bottom: '-4px', right: '-10px', fontSize: '46px', opacity: 0.2, transform: 'rotate(25deg)' }}>🎵</div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {selectedSong && <SongSheet song={selectedSong} songs={filtered} onClose={() => setSelectedSong(null)} />}
+      {selectedSong && <SongSheet song={selectedSong} songs={allSongs} onClose={() => setSelectedSong(null)} />}
     </div>
   );
 }

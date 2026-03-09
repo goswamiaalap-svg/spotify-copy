@@ -39,6 +39,7 @@ export default function PlaylistsPage() {
     }, []);
 
     const openCurated = async (pl) => {
+        if (!pl || loadingId) return;
         if (curatedSongs[pl.id]?.length > 1) {
             setSelected({ ...pl, type: 'curated' });
             setSelectedSongs(curatedSongs[pl.id]);
@@ -46,20 +47,37 @@ export default function PlaylistsPage() {
         }
         setLoadingId(pl.id);
 
-        // Try multiple queries for better results
+        try {
+            // Try direct fetch by ID first (if it's a real JioSaavn ID)
+            if (typeof pl.id === 'string' && pl.id.length > 5) {
+                const res = await axios.get(`${SAAVN}/playlists?id=${pl.id}`);
+                const data = res.data?.data;
+                if (data?.songs?.length > 0) {
+                    const songs = parseSongs(data.songs);
+                    setCuratedSongs(prev => ({ ...prev, [pl.id]: songs }));
+                    setSelected({ ...pl, name: data.name, type: 'curated' });
+                    setSelectedSongs(songs);
+                    setLoadingId(null);
+                    return;
+                }
+            }
+        } catch { console.warn('Direct ID fetch failed, falling back to search'); }
+
+        // Fallback to search-based "playlist"
         const queries = [pl.query, pl.name + ' songs hindi', pl.name + ' best songs'];
         let songs = [];
 
         for (const q of queries) {
+            if (!q) continue;
             try {
                 const res = await axios.get(
-                    `${SAAVN}/search/songs?query=${encodeURIComponent(q)}&limit=20`,
+                    `${SAAVN}/search/songs?query=${encodeURIComponent(q)}&limit=25`,
                     { timeout: 15000 }
                 );
                 const results = res.data?.data?.results || [];
                 if (results.length > 0) {
                     songs = parseSongs(results);
-                    break; // SUCCESS
+                    break;
                 }
             } catch (e) {
                 console.warn('Playlist query failed:', q);
@@ -71,6 +89,14 @@ export default function PlaylistsPage() {
         setSelectedSongs(songs);
         setLoadingId(null);
     };
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        if (id) {
+            openCurated({ id, name: 'Playlist' });
+        }
+    }, [window.location.search]);
 
     const openUser = (pl) => {
         setSelected({ ...pl, type: 'user' });
