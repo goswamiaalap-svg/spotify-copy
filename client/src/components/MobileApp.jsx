@@ -315,10 +315,78 @@ function NowPlayingScreen({ onClose }) {
   const [showOptions, setShowOptions] = useState(false);
   const [videoId, setVideoId] = useState(null);
   const [showVideo, setShowVideo] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [videoTransitioning, setVideoTransitioning] = useState(false);
   const [translated, setTranslated] = useState(false);
   const [sleepTimer, setSleepTimer] = useState(null); // null | minutes
   const timerRef = useRef(null);
   const { lyrics, seekTo: seekToLyrics } = useLyrics(currentSong);
+
+  const YOUR_API = 'https://new-youtube-o7cl.onrender.com';
+
+  const fetchVideo = async () => {
+    setVideoTransitioning(true);
+
+    // YouTube songs — videoId already stored, INSTANT switch
+    const vid = currentSong.videoId || window.__currentVideoId;
+    if (vid) {
+      setVideoId(vid);
+      // Pause audio, video takes over
+      if (window.__audioEl) {
+        window.__audioEl.pause();
+        window.__audioEl.muted = true;
+      }
+      setShowVideo(true);
+      setVideoTransitioning(false);
+      return;
+    }
+
+    // Existing videoId logic (from previous searches)
+    if (videoId) {
+      if (window.__audioEl) {
+        window.__audioEl.pause();
+        window.__audioEl.muted = true;
+      }
+      setShowVideo(true);
+      setVideoTransitioning(false);
+      return;
+    }
+
+    setVideoLoading(true);
+    try {
+      const q = `${currentSong.title} ${currentSong.artist} official video`;
+      const r = await fetch(`${YOUR_API}/search?q=${encodeURIComponent(q)}`);
+      if (r.ok) {
+        const items = await r.json();
+        const vid = items?.[0]?.videoId;
+        if (vid) {
+          setVideoId(vid);
+          if (window.__audioEl) {
+            window.__audioEl.pause();
+            window.__audioEl.muted = true;
+          }
+          setShowVideo(true);
+        } else {
+          alert('Video not found');
+        }
+      }
+    } catch {
+      alert('Could not load video');
+    }
+
+    setVideoLoading(false);
+    setVideoTransitioning(false);
+  };
+
+  const switchToAudio = () => {
+    // Resume audio
+    if (window.__audioEl) {
+      window.__audioEl.muted = false;
+      window.__audioEl.play().catch(() => { });
+    }
+    setShowVideo(false);
+    setVideoTransitioning(false);
+  };
 
   useEffect(() => {
     setVideoId(null);
@@ -348,6 +416,7 @@ function NowPlayingScreen({ onClose }) {
   };
 
   const progressPct = duration > 0 ? (progress / duration) * 100 : 0;
+  const audioTime = Math.floor(window.__audioEl?.currentTime || 0);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-zinc-950 flex flex-col animate-in slide-in-from-bottom duration-500">
@@ -381,16 +450,13 @@ function NowPlayingScreen({ onClose }) {
               {showVideo && videoId ? (
                 <div className="w-full h-full bg-black">
                   <iframe
-                    src={videoId.startsWith('_SEARCH_')
-                      ? `https://www.youtube.com/results?search_query=${videoId.replace('_SEARCH_', '')}`
-                      : `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&rel=0&showinfo=0&modestbranding=1`
-                    }
+                    src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&start=${audioTime}`}
                     className="w-full h-full border-none"
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
                   />
                   <button
-                    onClick={() => setShowVideo(false)}
+                    onClick={switchToAudio}
                     className="absolute top-4 left-4 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/20 rounded-full text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2"
                   >
                     <Disc size={14} /> Switch to Audio
@@ -400,25 +466,16 @@ function NowPlayingScreen({ onClose }) {
                 <>
                   <img src={getImage(currentSong.albumArt, currentSong.source)} className="w-full h-full object-cover" alt="" />
                   <button
-                    onClick={async () => {
-                      if (window.__currentVideoId) {
-                        setVideoId(window.__currentVideoId);
-                        setShowVideo(true);
-                      } else {
-                        const q = `${currentSong.title} ${currentSong.artist}`;
-                        const r = await fetch(`/api/video?q=${encodeURIComponent(q)}`);
-                        if (r.ok) {
-                          const d = await r.json();
-                          if (d?.videoId) {
-                            setVideoId(d.videoId);
-                            setShowVideo(true);
-                          }
-                        }
-                      }
-                    }}
-                    className="absolute bottom-4 right-4 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2 active:scale-95 transition-all"
+                    onClick={fetchVideo}
+                    disabled={videoLoading || videoTransitioning}
+                    className="absolute bottom-4 right-4 px-4 py-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-2 active:scale-95 transition-all disabled:opacity-50"
                   >
-                    <Play size={14} fill="currentColor" /> Watch Video
+                    {videoLoading ? (
+                      <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Play size={14} fill="currentColor" />
+                    )}
+                    {videoLoading ? 'Searching...' : 'Watch Video'}
                   </button>
                 </>
               )}

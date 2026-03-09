@@ -38,95 +38,115 @@ function SongImage({ src, source, size = 46, radius = 4 }) {
 
 // ══════════════════════════════════════════
 // SEARCH ALL PLATFORMS — YouTube FULL songs first
+// ── YOUR YouTube API — FULL songs, every song ever ──
 // ══════════════════════════════════════════
+const YOUR_API = 'https://new-youtube-o7cl.onrender.com';
+
 async function searchEverywhere(query) {
   const seen = new Set();
-  const ytFull = [];    // YouTube — FULL songs via Piped
-  const saavnFull = []; // JioSaavn — FULL songs
-  const audiusFull = [];// Audius — FULL songs
-  const previews = [];  // Deezer/iTunes — 30s only
+  const ytSongs = [];
+  const saavnSongs = [];
+  const audiusSongs = [];
+  const previews = [];
 
-  const makeKey = s => `${s.title?.toLowerCase().slice(0, 30)}-${s.artist?.toLowerCase().slice(0, 20)}`;
+  const makeKey = s => `${s.title?.toLowerCase().slice(0, 25)}-${s.artist?.toLowerCase().slice(0, 15)}`;
 
   const addTo = (arr, song) => {
     const k = makeKey(song);
-    if (!seen.has(k) && song.title && song.audioUrl) { seen.add(k); arr.push(song); }
+    if (!seen.has(k) && song.title && song.audioUrl) {
+      seen.add(k); arr.push(song);
+    }
   };
 
   await Promise.allSettled([
-
-    // ── YouTube FULL SONGS (Fast Search) ──
-    fetch(`/api/youtube-search?q=${encodeURIComponent(query)}`)
-      .then(r => r.json()).then(d => {
-        (d?.songs || []).forEach(item => {
-          addTo(ytFull, {
-            id: `yt-${item.videoId}`,
-            videoId: item.videoId,
-            title: item.title,
-            artist: item.artist,
-            albumArt: item.thumbnail,
-            duration: item.duration,
-            source: 'YouTube', isPreview: false,
-          });
+    // ── YOUR YouTube API — FULL songs via Render ──
+    fetch(`${YOUR_API}/search?q=${encodeURIComponent(query)}`, {
+      signal: AbortSignal.timeout(10000)
+    }).then(r => r.json()).then(items => {
+      (items || []).forEach(item => {
+        if (!item.videoId) return;
+        addTo(ytSongs, {
+          id: `yt-${item.videoId}`,
+          videoId: item.videoId,
+          title: item.title,
+          artist: extractArtist(item.title),
+          albumArt: item.thumbnail?.replace('hqdefault', 'maxresdefault').replace('hq720', 'maxresdefault'),
+          duration: item.duration || 0,
+          audioUrl: `${YOUR_API}/audio?videoId=${item.videoId}`,
+          downloadUrl: [{ url: `${YOUR_API}/audio?videoId=${item.videoId}`, quality: 'full' }],
+          source: 'YouTube',
+          isPreview: false,
         });
-      }).catch(() => { }),
+      });
+    }).catch(e => console.log('YT API error:', e)),
 
     // ── JioSaavn — FULL SONGS ──
-    fetch(`https://jiosaavn-api-privatecvc2.vercel.app/search/songs?query=${encodeURIComponent(query)}&limit=15`, { signal: AbortSignal.timeout(8000) })
-      .then(r => r.json()).then(d => {
-        const results = d?.data?.results || d?.data || d?.results || [];
-        results.forEach(s => {
-          const download = Array.isArray(s.downloadUrl) ? s.downloadUrl : (s.download_url || []);
-          const best = download.find(u => u.quality === '320kbps') || download.find(u => u.quality === '160kbps') || download[download.length - 1];
-          let art = '';
-          if (Array.isArray(s.image)) art = s.image[2]?.link || s.image[2]?.url || s.image[1]?.link || '';
-          else if (typeof s.image === 'string') art = s.image;
-
-          if (best?.link || best?.url) addTo(saavnFull, {
-            id: `saavn-${s.id}`, title: s.title || s.name,
-            artist: s.artists?.primary?.map(a => a.name).join(', ') || s.artist || 'Unknown',
-            album: s.album?.name || s.album || '',
-            albumArt: art,
-            duration: s.duration, audioUrl: best.link || best.url,
-            downloadUrl: download, source: 'JioSaavn', isPreview: false,
-          });
+    fetch(`https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}&limit=10`, {
+      signal: AbortSignal.timeout(8000)
+    }).then(r => r.json()).then(d => {
+      (d?.data?.results || []).forEach(s => {
+        const urls = s.downloadUrl || [];
+        const best = urls.find(u => u.quality === '320kbps') || urls.find(u => u.quality === '160kbps') || urls[urls.length - 1];
+        if (best?.url) addTo(saavnSongs, {
+          id: `saavn-${s.id}`,
+          title: s.name,
+          artist: s.artists?.primary?.map(a => a.name).join(', ') || 'Unknown',
+          album: s.album?.name || '',
+          albumArt: s.image?.[2]?.url || s.image?.[1]?.url || '',
+          duration: s.duration,
+          audioUrl: best.url,
+          downloadUrl: s.downloadUrl,
+          source: 'JioSaavn', isPreview: false,
         });
-      }).catch(() => { }),
+      });
+    }).catch(() => { }),
 
     // ── Audius — FULL SONGS ──
-    fetch(`https://discoveryprovider.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=15&app_name=SpotifyClone`, { signal: AbortSignal.timeout(8000) })
-      .then(r => r.json()).then(d => {
-        (d?.data || []).forEach(s => {
-          const url = `https://discoveryprovider.audius.co/v1/tracks/${s.id}/stream?app_name=SpotifyClone`;
-          addTo(audiusFull, {
-            id: `audius-${s.id}`, title: s.title,
-            artist: s.user?.name || 'Unknown',
-            albumArt: s.artwork?.['1000x1000'] || s.artwork?.['480x480'] || '',
-            duration: s.duration, audioUrl: url,
-            downloadUrl: [{ url, quality: 'full' }],
-            source: 'Audius', isPreview: false,
-          });
+    fetch(`https://discoveryprovider.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=10&app_name=SpotifyClone`, {
+      signal: AbortSignal.timeout(8000)
+    }).then(r => r.json()).then(d => {
+      (d?.data || []).forEach(s => {
+        const url = `https://discoveryprovider.audius.co/v1/tracks/${s.id}/stream?app_name=SpotifyClone`;
+        addTo(audiusSongs, {
+          id: `audius-${s.id}`,
+          title: s.title,
+          artist: s.user?.name || 'Unknown',
+          albumArt: s.artwork?.['1000x1000'] || s.artwork?.['480x480'] || '',
+          duration: s.duration,
+          audioUrl: url,
+          downloadUrl: [{ url, quality: 'full' }],
+          source: 'Audius', isPreview: false,
         });
-      }).catch(() => { }),
+      });
+    }).catch(() => { }),
 
     // ── Deezer 30s preview ──
-    fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=10`, { signal: AbortSignal.timeout(6000) })
-      .then(r => r.json()).then(d => {
-        (d?.data || []).forEach(s => {
-          if (s.preview) addTo(previews, {
-            id: `deezer-${s.id}`, title: s.title,
-            artist: s.artist?.name || 'Unknown', album: s.album?.title || '',
-            albumArt: s.album?.cover_xl || s.album?.cover_big || '',
-            duration: 30, audioUrl: s.preview,
-            downloadUrl: [{ url: s.preview, quality: 'preview' }],
-            source: 'Deezer', isPreview: true,
-          });
+    fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=8`, {
+      signal: AbortSignal.timeout(6000)
+    }).then(r => r.json()).then(d => {
+      (d?.data || []).forEach(s => {
+        if (s.preview) addTo(previews, {
+          id: `deezer-${s.id}`,
+          title: s.title,
+          artist: s.artist?.name || 'Unknown',
+          albumArt: s.album?.cover_xl || s.album?.cover_big || '',
+          duration: 30, audioUrl: s.preview,
+          downloadUrl: [{ url: s.preview, quality: 'preview' }],
+          source: 'Deezer', isPreview: true,
         });
-      }).catch(() => { }),
+      });
+    }).catch(() => { }),
   ]);
 
-  // Full songs first (YouTube → JioSaavn → Audius), previews last
-  return [...ytFull, ...saavnFull, ...audiusFull, ...previews];
+  // YouTube first → JioSaavn → Audius → Deezer previews
+  return [...ytSongs, ...saavnSongs, ...audiusSongs, ...previews];
+}
+
+function extractArtist(title) {
+  if (!title) return 'Unknown';
+  if (title.includes(' - ')) return title.split(' - ')[0].trim();
+  if (title.includes(' | ')) return title.split(' | ')[1]?.trim() || 'Unknown';
+  return 'Unknown';
 }
 
 function SongSheet({ song, songs, onClose }) {

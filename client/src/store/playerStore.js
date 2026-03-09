@@ -97,29 +97,19 @@ const usePlayerStore = create((set, get) => ({
             try {
                 let audioUrl = songData.audioUrl || null;
 
-                // Handle YouTube: fetch stream URL on demand
-                if (!audioUrl && songData.source === 'YouTube' && songData.videoId) {
-                    const r = await fetch(`/api/youtube-stream?videoId=${songData.videoId}`);
-                    if (!r.ok) throw new Error('YouTube stream failed');
-                    const data = await r.json();
-                    audioUrl = data.audioUrl;
-                }
-
-                // Handle direct downloadUrl (JioSaavn / Generic)
+                // Handle direct downloadUrl (JioSaavn / YouTube Render API / Generic)
                 if (!audioUrl && songData.downloadUrl && Array.isArray(songData.downloadUrl)) {
                     const download = songData.downloadUrl;
-                    const best = download.find(u => u.quality === '320kbps') || download.find(u => u.quality === '160kbps') || download[download.length - 1];
-                    if (best?.link || best?.url) audioUrl = decodeURIComponent(best.link || best.url);
+                    const best = download.find(u => u.quality === 'full') ||
+                        download.find(u => u.quality === '320kbps') ||
+                        download.find(u => u.quality === '160kbps') ||
+                        download[download.length - 1];
+                    if (best?.link || best?.url) audioUrl = decodeURIComponent(best.link || best.url || '');
                 }
 
-                // Fallback: fetch from JioSaavn API directly
-                if (!audioUrl && (songData.source === 'JioSaavn' || !songData.source) && songData.id?.startsWith('saavn')) {
-                    const cleanId = songData.id.replace('saavn-', '').replace('saavn2-', '');
-                    const r = await axios.get(`${SAAVN}/songs/${cleanId}`, { timeout: 10000 });
-                    const data = r.data?.data?.[0] || r.data?.[0];
-                    const urls = data?.downloadUrl || [];
-                    const best = urls.find(u => u.quality === '320kbps') || urls[urls.length - 1];
-                    if (best?.link || best?.url) audioUrl = decodeURIComponent(best.link || best.url);
+                // Handle YouTube: fetch stream URL on demand if not already resolved
+                if (!audioUrl && songData.source === 'YouTube' && songData.videoId) {
+                    audioUrl = `https://new-youtube-o7cl.onrender.com/audio?videoId=${songData.videoId}`;
                 }
 
                 if (!audioUrl) throw new Error('Could not resolve audio link');
